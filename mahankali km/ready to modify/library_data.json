@@ -1,0 +1,149 @@
+{
+    "students": {
+        "1": {
+            "name": "pruthviraj",
+            "age": 19,
+            "gender": "male",
+            "reg_number": "1",
+            "mob_number": "98786543210"
+        },
+        "3": {
+            "name": "pruthviraj patil",
+            "age": 19,
+            "gender": "male",
+            "reg_number": "3",
+            "mob_number": "0000000000"
+        },
+        "4": {
+            "name": "ppp",
+            "age": 23,
+            "gender": "male",
+            "reg_number": "4",
+            "mob_number": "1111111111"
+        },
+        "5": {
+            "name": "Amit",
+            "age": 21,
+            "gender": "Male",
+            "reg_number": "5",
+            "mob_number": "9998887777"
+        },
+        "6": {
+            "name": "Pooja",
+            "age": 19,
+            "gender": "Female",
+            "reg_number": "6",
+            "mob_number": "9991112222"
+        },
+        "7": {
+            "name": "Amit",
+            "age": 21,
+            "gender": "Male",
+            "reg_number": "7",
+            "mob_number": "9998887777"
+        },
+        "8": {
+            "name": "Pooja",
+            "age": 19,
+            "gender": "Female",
+            "reg_number": "8",
+            "mob_number": "9991112222"
+        }
+    },
+    "plans": {
+        "1": {
+            "plan_id": "1",
+            "name": "Monthly-Day",
+            "duration_days": 30,
+            "price": 1200,
+            "shift": "day"
+        },
+        "2": {
+            "plan_id": "2",
+            "name": "Monthly-Night",
+            "duration_days": 30,
+            "price": 1000,
+            "shift": "night"
+        },
+        "3": {
+            "plan_id": "3",
+            "name": "Weekly-Day",
+            "duration_days": 7,
+            "price": 400,
+            "shift": "day"
+        },
+        "4": {
+            "plan_id": "4",
+            "name": "Weekly-Night",
+            "duration_days": 7,
+            "price": 350,
+            "shift": "night"
+        },
+        "5": {
+            "plan_id": "5",
+            "name": "full",
+            "duration_days": 30,
+            "price": 400,
+            "shift": "both"
+        },
+        "6": {
+            "plan_id": "6",
+            "name": "one day",
+            "duration_days": 1,
+            "price": 10.0,
+            "shift": "day"
+        }
+    },
+    "members": {
+        "1": {
+            "member_id": "1",
+            "student": "1",
+            "plan": "5",
+            "seat_number": "55",
+            "start_date": "2025-11-02",
+            "end_date": "2025-12-02",
+            "paid": false,
+            "status": "active"
+        },
+        "2": {
+            "member_id": "2",
+            "student": "2",
+            "plan": "3",
+            "seat_number": "58",
+            "start_date": "2025-11-02",
+            "end_date": "2025-11-09",
+            "paid": false,
+            "status": "active"
+        },
+        "3": {
+            "member_id": "3",
+            "student": "1",
+            "plan": "1",
+            "seat_number": "A1",
+            "start_date": "2025-11-04",
+            "end_date": "2025-12-04",
+            "paid": false,
+            "status": "active"
+        },
+        "4": {
+            "member_id": "4",
+            "student": "2",
+            "plan": "2",
+            "seat_number": "B1",
+            "start_date": "2025-11-04",
+            "end_date": "2025-12-04",
+            "paid": false,
+            "status": "active"
+        },
+        "5": {
+            "member_id": "5",
+            "student": "1",
+            "plan": "1",
+            "seat_number": "01-01-2026",
+            "start_date": "2025-11-04",
+            "end_date": "2025-12-04",
+            "paid": false,
+            "status": "active"
+        }
+    }
+}
