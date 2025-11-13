@@ -1,1 +1,0 @@
-This is a software for library management
