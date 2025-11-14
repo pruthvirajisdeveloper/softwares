@@ -1,6 +1,5 @@
-from ui import *
-a=startapp()
-a.MakeSlider()
-a.ContentArea()
-a.PackButtons()
-a.mainloop()
+from ui import StartApp
+
+if __name__ == "__main__":
+    app = StartApp()
+    app.mainloop()
