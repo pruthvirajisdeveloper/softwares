@@ -1,8 +1,10 @@
 from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel, CTkEntry, CTkScrollbar
-from tkinter import ttk
+from tkinter import ttk, font as tkfont
+import tkinter as tk
 import appimfo
-from be import Student, Students, test, newstudent
+from be import Students, test, newstudent
 test()
+
 
 def newid():
     # Generate a new ID by incrementing the highest existing student ID
@@ -20,23 +22,23 @@ class StartApp(CTk):
         self.title(f"{appimfo.name} {appimfo.version}")
         self.geometry("900x600+222+222")
         self.configure(bg="#f5f5f5")
-        self.make_slider()
+        self.menubar()
         self.content_area()
-        self.pack_buttons()
         self.setlist()
+        self.binds()
+    def binds(self):
+        self.bind("<Escape>", lambda e: self.setlist())
+        self.bind("<F1>", lambda e: self.add_student_ui())
 
-    def make_slider(self):
-        self.slider = CTkFrame(self, width=120, fg_color="#edc37b")
-        self.slider.pack(side="left", fill="y")
+
+        
+
 
     def content_area(self):
         self.content = CTkFrame(self, fg_color="#ffffff")
         self.content.pack(side="right", fill="both", expand=True)
 
-    def pack_buttons(self):
-        CTkLabel(self.slider, text="Menu", font=("serif", 18, "bold"), fg_color="#edc37b").pack(pady=20)
-        CTkButton(self.slider, text="List Students", command=self.setlist, width=100, height=40).pack(pady=10)
-        CTkButton(self.slider, text="Add Student", command=self.add_student_ui, width=100, height=40).pack(pady=10)
+
 
     def clear(self, master):
         for w in master.winfo_children():
@@ -47,6 +49,26 @@ class StartApp(CTk):
         self.table()
 
     def table(self):
+        # ---- SEARCH BAR ----
+        search_frame = CTkFrame(self.content, fg_color="#ffffff")
+        search_frame.pack(pady=5)
+
+        CTkLabel(search_frame, text="Search:", font=("serif", 14)).pack(side="left", padx=5)
+        self.search_entry = CTkEntry(search_frame, width=200, font=("serif", 14))
+        self.search_entry.pack(side="left", padx=5)
+
+        CTkButton(
+            search_frame, text="Go", width=60,
+            fg_color="#80e87a", text_color="black",
+            command=self.search_student
+        ).pack(side="left", padx=5)
+
+        CTkButton(
+            search_frame, text="Reset", width=60,
+            fg_color="#ffb347", text_color="black",
+            command=self.setlist
+        ).pack(side="left", padx=5)
+
         CTkLabel(self.content, text="Student List", font=("serif", 20, "bold"), fg_color="#ffffff").pack(pady=10)
         tree_frame = CTkFrame(self.content, fg_color="#ffffff")
         tree_frame.pack(fill="both", expand=True, padx=20, pady=10)
@@ -76,6 +98,31 @@ class StartApp(CTk):
         for stdd in Students:
             row = stdd.getimfo()[:5]
             self.tree.insert("", "end", values=row)
+
+
+    def search_student(self):
+        query = self.search_entry.get().lower().strip()
+        if not query:
+            return self.setlist()
+
+        self.tree.delete(*self.tree.get_children())
+
+        for stdd in Students:
+            data = stdd.getimfo()
+            row_id, name, gender, age, address = data[:5]  # <--- use first 5 only
+
+            # Convert all to string for simple matching
+            if (
+                query in str(row_id).lower()
+                or query in name.lower()
+                or query in gender.lower()
+                or query in str(age).lower()
+                or query in address.lower()
+            ):
+                self.tree.insert("", "end", values=data[:5])
+
+
+
 
     def add_student_ui(self):
         self.clear(self.content)
@@ -119,18 +166,61 @@ class StartApp(CTk):
         name = self.name_entry.get()
         gender = self.gender_entry.get()
         bday = self.bday_entry.get()
-        age = self.age_entry.get()
+        age = int(self.age_entry.get())   # AGE MUST BE INT
         addr = self.address_entry.get()
         sid = newid()
+
+        from datetime import date
+        joindate = date.today().strftime("%d/%m/%Y")
+
         newstudent(
-            name=name,
             id=sid,
+            name=name,
             adress=addr,
             gender=gender,
             bday=bday,
-            age=age
+            age=age,
+            joindate=joindate
         )
+
         self.setlist()
+
+
+
+
+    def menubar(self):
+        # Create menu bar
+        menubar = tk.Menu(self)
+
+        # ---------------- FILE MENU ----------------
+        file_menu = tk.Menu(menubar, tearoff=0)
+        file_menu.add_command(label="New")
+        file_menu.add_command(label="Open")
+        file_menu.add_command(label="Save")
+        file_menu.add_separator()
+        file_menu.add_command(label="Sync")
+        file_menu.add_command(label="Backup")
+        menubar.add_cascade(label="File", menu=file_menu)
+
+        # ---------------- ACTIONS MENU ----------------
+        actions_menu = tk.Menu(menubar, tearoff=0)
+        actions_menu.add_command(label="Register Student", command=self.add_student_ui)
+        actions_menu.add_command(label="List Students", command=self.setlist)
+        menubar.add_cascade(label="Actions", menu=actions_menu)
+
+        # ---------------- SETTINGS MENU ----------------
+        settings_menu = tk.Menu(menubar, tearoff=0)
+        settings_menu.add_command(label="General Settings")
+        settings_menu.add_command(label="Theme")
+        settings_menu.add_separator()
+        settings_menu.add_command(label="Exit", command=self.quit)
+        menubar.add_cascade(label="Settings", menu=settings_menu)
+
+        # Attach to window
+        self.config(menu=menubar)
+
+
+
 
 if __name__ == "__main__":
     app = StartApp()
