@@ -1,7 +1,10 @@
 from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel, CTkEntry, CTkScrollbar
-from tkinter import ttk, font as tkfont
+from tkinter import ttk
 import tkinter as tk
 import appimfo
+from calendar_widget import CTkCalendar
+
+from add_student import InputField
 from be import Students, test, newstudent
 test()
 
@@ -29,6 +32,7 @@ class StartApp(CTk):
     def binds(self):
         self.bind("<Escape>", lambda e: self.setlist())
         self.bind("<F1>", lambda e: self.add_student_ui())
+
 
 
         
@@ -122,52 +126,86 @@ class StartApp(CTk):
                 self.tree.insert("", "end", values=data[:5])
 
 
-
-
     def add_student_ui(self):
         self.clear(self.content)
-        CTkLabel(self.content, text="Add New Student", font=("serif", 20, "bold"), fg_color="#ffffff").pack(pady=10)
+
+        CTkLabel(
+            self.content, text="Add New Student",
+            font=("serif", 20, "bold"),
+            fg_color="#ffffff"
+        ).pack(pady=10)
+
         form = CTkFrame(self.content, fg_color="#f0f0f0")
         form.pack(pady=20, padx=30)
-        # Name
-        CTkLabel(form, text="Full Name:", font=("serif", 14)).grid(row=0, column=0, sticky="w", pady=5)
-        self.name_entry = CTkEntry(form, width=200, font=("serif", 14))
-        self.name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+        # Full Name
+        self.name_field = InputField(form, "Full Name:")
+        self.name_field.grid(row=0, column=0, pady=5, padx=5)
+
         # Gender
-        CTkLabel(form, text="Gender:", font=("serif", 14)).grid(row=1, column=0, sticky="w", pady=5)
-        self.gender_entry = CTkEntry(form, width=120, font=("serif", 14))
-        self.gender_entry.grid(row=1, column=1, padx=10, pady=5)
-        # Birthday
-        CTkLabel(form, text="Birthday (DD/MM/YYYY):", font=("serif", 14)).grid(row=2, column=0, sticky="w", pady=5)
-        self.bday_entry = CTkEntry(form, width=140, font=("serif", 14))
-        self.bday_entry.grid(row=2, column=1, padx=10, pady=5)
-        # Age
-        CTkLabel(form, text="Age:", font=("serif", 14)).grid(row=3, column=0, sticky="w", pady=5)
-        self.age_entry = CTkEntry(form, width=80, font=("serif", 14))
-        self.age_entry.grid(row=3, column=1, padx=10, pady=5)
+        self.gender_field = InputField(form, "Gender:", entry_width=120)
+        self.gender_field.grid(row=1, column=0, pady=5, padx=5)
+
+        # Birthday (disabled entry)
+        self.bday_field = InputField(form, "Birthday:", entry_width=150)
+        self.bday_field.entry.configure(state="disabled")
+        self.bday_field.grid(row=2, column=0, pady=5, padx=5)
+
+        # Age (auto-calculated)
+        self.age_field = InputField(form, "Age:", entry_width=80)
+        self.age_field.grid(row=2, column=1, pady=5, padx=5)
+
+        # Permanent Calendar Frame (CREATE FIRST)
+        self.calendar_frame = CTkFrame(form, fg_color="#e8e8e8")
+        self.calendar_frame.grid(row=3, column=0, pady=5, padx=5, sticky="w")
+
+        # Load calendar AFTER frame exists ✔
+        self.calendar_widget = CTkCalendar(
+            master=self.calendar_frame,
+            on_select=self.set_bday
+        )
+        self.calendar_widget.pack()
+
+
+
         # Address
-        CTkLabel(form, text="Address:", font=("serif", 14)).grid(row=4, column=0, sticky="nw", pady=5)
-        self.address_entry = CTkEntry(form, width=200, font=("serif", 14))
-        self.address_entry.grid(row=4, column=1, padx=10, pady=5)
+        self.addr_field = InputField(form, "Address:", entry_width=220)
+        self.addr_field.grid(row=4, column=0, pady=5, padx=5)
+
         # Buttons
         btn_frame = CTkFrame(self.content, fg_color="#ffffff")
         btn_frame.pack(pady=20)
+
         CTkButton(
             btn_frame, text="Save Student", fg_color="#79e65b", text_color="black",
             font=("serif", 14, "bold"), width=120, command=self.save_student
         ).pack(side="left", padx=10)
+
         CTkButton(
             btn_frame, text="Clear", fg_color="#ffb347", text_color="black",
-            font=("serif", 14, "bold"), width=80, command=lambda: self.clear(form)
+            font=("serif", 14, "bold"), width=80,
+            command=lambda: self.clear(form)
         ).pack(side="left", padx=10)
-        self.name_entry.focus()
+
+        self.name_field.entry.focus()
+
+
+    def set_bday(self, date):
+        self.bday_field.entry.configure(state="normal")
+        self.bday_field.entry.delete(0, "end")
+        self.bday_field.entry.insert(0, date)
+        self.bday_field.entry.configure(state="disabled")
+        self.calculate_age_from_bday()
+
+
+
 
     def save_student(self):
-        name = self.name_entry.get()
-        gender = self.gender_entry.get()
-        bday = self.bday_entry.get()
-        age = int(self.age_entry.get())   # AGE MUST BE INT
-        addr = self.address_entry.get()
+        name = self.name_field.get()
+        gender = self.gender_field.get()
+        bday = self.bday_field.get()
+        age = int(self.age_field.get())   # AGE MUST BE INT
+        addr = self.addr_field.get()
         sid = newid()
 
         from datetime import date
@@ -184,6 +222,39 @@ class StartApp(CTk):
         )
 
         self.setlist()
+
+
+    def calculate_age_from_bday(self, event=None):
+        bday = self.bday_field.get().strip()
+
+        # Expect format DD/MM/YYYY
+        if len(bday) != 10 or bday[2] != "/" or bday[5] != "/":
+            self.age_field.set("")   # Clear age if invalid
+            return
+
+        try:
+            day, month, year = map(int, bday.split("/"))
+
+            from datetime import date
+            today = date.today()
+
+            # Basic validity check
+            dob = date(year, month, day)
+
+            # Calculate age
+            age = today.year - dob.year - (
+                (today.month, today.day) < (dob.month, dob.day)
+            )
+
+            # Set the age
+            if age >= 0:
+                self.age_field.set(str(age))
+            else:
+                self.age_field.set("")
+
+        except Exception:
+            # Invalid date → clear the age box
+            self.age_field.set("")
 
 
 

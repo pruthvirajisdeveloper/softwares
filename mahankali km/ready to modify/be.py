@@ -14,10 +14,10 @@ def init_pool():
             minconn=1,
             maxconn=10,
             host="localhost",
-            port=5432,
+            port=1234,
             user="postgres",
-            password="",
-            database="db"
+            password="9900",
+            database="studentsdb2"
         )
         print("Pool created!")
 
