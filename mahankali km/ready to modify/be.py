@@ -23,12 +23,10 @@ def init_pool():
 
 
 def get_conn():
-    """Get a pooled connection"""
     return POOL.getconn()
 
 
 def put_conn(conn):
-    """Return connection to pool"""
     POOL.putconn(conn)
 
 
@@ -57,12 +55,11 @@ def init_db():
 # ===================== DB OPERATIONS ===============================
 
 def db_add_student(s):
-    """Insert a student using pool"""
     conn = get_conn()
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO students(name, adress, gender, bday, age, joindate)
+        INSERT INTO students (name, adress, gender, bday, age, joindate)
         VALUES (%s, %s, %s, %s, %s, %s)
         RETURNING id;
     """, (s.name, s.adress, s.gender, s.bday, s.age, s.joindate))
@@ -76,7 +73,6 @@ def db_add_student(s):
 
 
 def db_load_students():
-    """Load all students using pool"""
     conn = get_conn()
     cur = conn.cursor()
 
@@ -88,13 +84,28 @@ def db_load_students():
     return rows
 
 
+def db_update_student(s):
+    """Update DB row from Student object"""
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE students
+        SET name=%s, adress=%s, gender=%s, bday=%s, age=%s
+        WHERE id=%s;
+    """, (s.name, s.adress, s.gender, s.bday, s.age, s.id))
+
+    conn.commit()
+    cur.close()
+    put_conn(conn)
+
+
 # ===================== STUDENT CLASS ===============================
 
 class Student:
-    """Student structure matching DB"""
-    def __init__(self, name, id, adress, gender, bday, age, joindate):
-        self.name = name
+    def __init__(self, id, name, adress, gender, bday, age, joindate):
         self.id = id
+        self.name = name
         self.adress = adress
         self.gender = gender
         self.bday = bday
@@ -102,27 +113,20 @@ class Student:
         self.joindate = joindate
 
     def getimfo(self):
+        """Return UI-friendly ordering"""
         return [
             self.id,
             self.name,
             self.gender,
             self.age,
             self.adress,
-            self.joindate
+            self.bday,
+            self.joindate,
         ]
 
-    def edit(self, name=None, adress=None, gender=None, bday=None, age=None):
-        if name:
-            self.name = name
-        if adress:
-            self.adress = adress
-        if gender:
-            self.gender = gender
-        if bday:
-            self.bday = bday
-        if age:
-            self.age = age
-        return self.getimfo()
+    def update(self):
+        """Update database"""
+        db_update_student(self)
 
     def __str__(self):
         return f"Student(id={self.id}, name='{self.name}', gender={self.gender}, age={self.age}, adress='{self.adress}')"
@@ -133,9 +137,9 @@ class Student:
 Students = []
 
 def newstudent(id, name, adress, gender, bday, age, joindate):
-    """Create student + save to DB"""
-    if not all([name, id, adress, gender, bday, age]):
+    if not all([name, adress, gender, bday, age]):
         return "Missing information"
+
     s = Student(id=id, name=name, adress=adress, gender=gender, bday=bday, age=age, joindate=joindate)
     new_id = db_add_student(s)
     s.id = new_id
@@ -146,7 +150,7 @@ def newstudent(id, name, adress, gender, bday, age, joindate):
 
 def printstudentimfo():
     for s in Students:
-        id, name, gender, age, adress, join = s.getimfo()
+        id, name, gender, age, adress, join = s.getimfo()[:6]
         print(
             f"name     : {name}\n"
             f"id       : {id}\n"
@@ -159,15 +163,15 @@ def printstudentimfo():
 
 
 def test():
-    """Load real students from DB via pool"""
     init_pool()
     init_db()
 
     Students.clear()
     rows = db_load_students()
+
     for r in rows:
         id, name, adress, gender, bday, age, join = r
-        Students.append(Student(name, id, adress, gender, bday, age, join))
+        Students.append(Student(id, name, adress, gender, bday, age, join))
 
 
 if __name__ == "__main__":

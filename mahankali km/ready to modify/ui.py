@@ -1,8 +1,8 @@
 from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel, CTkEntry, CTkScrollbar
-from tkinter import ttk
 import tkinter as tk
 import appimfo
 from calendar_widget import CTkCalendar
+from tableeditor import CTkEditableTreeview
 
 from add_student import InputField
 from be import Students, test, newstudent
@@ -74,34 +74,116 @@ class StartApp(CTk):
         ).pack(side="left", padx=5)
 
         CTkLabel(self.content, text="Student List", font=("serif", 20, "bold"), fg_color="#ffffff").pack(pady=10)
+
+        # ---- TREE FRAME ----
         tree_frame = CTkFrame(self.content, fg_color="#ffffff")
         tree_frame.pack(fill="both", expand=True, padx=20, pady=10)
-        self.tree = ttk.Treeview(
+
+        # ---- EDITABLE TREE ----
+        self.tree = CTkEditableTreeview(
             tree_frame,
+            editable_columns=["name", "gender", "age", "address"],
             columns=("id", "name", "gender", "age", "address"),
-            show="headings"
+            show="headings",
+            on_cell_edit=self.on_cell_edit
         )
+
+
+
+
         self.tree.heading("id", text="ID")
         self.tree.heading("name", text="Name")
         self.tree.heading("gender", text="Gender")
         self.tree.heading("age", text="Age")
         self.tree.heading("address", text="Address")
+
         self.tree.column("id", width=50, anchor="center")
         self.tree.column("name", width=120)
         self.tree.column("gender", width=80)
         self.tree.column("age", width=50, anchor="center")
         self.tree.column("address", width=180)
+
+        # Scrollbar
         scroll = CTkScrollbar(tree_frame, orientation="vertical", command=self.tree.yview)
         scroll.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=scroll.set)
+
         self.tree.pack(expand=True, fill="both")
+
+        # Fill data
         self.fill_table()
+
+    
+    def on_cell_edit(self, row_id, column, new_value):
+        # extract real Student ID from row values
+        item = self.tree.item(row_id)
+        sid = item["values"][0]   # first column is ID
+
+        # Find in database
+        for stdd in Students:
+            if str(stdd.id) == str(sid):
+
+                # apply update
+                if column == "name":
+                    stdd.name = new_value
+
+                elif column == "gender":
+                    stdd.gender = new_value
+
+                elif column == "age":
+                    stdd.age = int(new_value)
+
+                elif column == "address":
+                    stdd.adress = new_value
+
+                # Update into database
+                stdd.update()       # <-- YOU MUST HAVE update() in model
+
+                print(f"Updated Student {sid}: {column} -> {new_value}")
+                break
+
+
 
     def fill_table(self):
         self.tree.delete(*self.tree.get_children())
         for stdd in Students:
             row = stdd.getimfo()[:5]
             self.tree.insert("", "end", values=row)
+
+    
+    def update_student(self, row_id, column, new_value, old_value):
+        # Fetch row values
+        values = self.tree.item(row_id, "values")
+        sid = values[0]  # ID is always first column
+
+        # Find the student object
+        target = None
+        for st in Students:
+            if str(st.getimfo()[0]) == str(sid):
+                target = st
+                break
+
+        if not target:
+            return
+
+        # Update the correct field
+        if column == "name":
+            target.name = new_value
+
+        elif column == "gender":
+            target.gender = new_value
+
+        elif column == "address":
+            target.adress = new_value  # your model uses "adress"
+
+        elif column == "age":
+            try:
+                target.age = int(new_value)
+            except:
+                target.age = 0
+
+        print("UPDATED:", target.getimfo())
+
 
 
     def search_student(self):
