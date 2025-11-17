@@ -3,6 +3,63 @@ from datetime import datetime
 import calendar
 
 
+# ================= SCROLLABLE YEAR DROPDOWN =====================
+
+class ScrollableYearBox(CTkFrame):
+    def __init__(self, master, values, variable, width=80, height=28, command=None):
+        super().__init__(master, fg_color="transparent")
+
+        self.values = values
+        self.variable = variable
+        self.command = command
+        self.width = width
+
+        self.btn = CTkButton(
+            self,
+            textvariable=self.variable,
+            width=width,
+            height=height,
+            corner_radius=10,
+            command=self.open_dropdown
+        )
+        self.btn.pack()
+
+        self.dropdown = None
+
+    def open_dropdown(self):
+        if self.dropdown:
+            self.dropdown.destroy()
+
+        self.dropdown = CTkToplevel(self)
+        self.dropdown.overrideredirect(True)
+        self.dropdown.geometry(
+            f"{self.width}x150+{self.winfo_rootx()}+{self.winfo_rooty() + 32}"
+        )
+
+        frame = CTkScrollableFrame(self.dropdown, width=self.width, height=150)
+        frame.pack()
+
+        for y in self.values:
+            b = CTkButton(
+                frame,
+                text=y,
+                width=self.width - 10,
+                height=26,
+                command=lambda val=y: self.select(val)
+            )
+            b.pack(pady=2)
+
+    def select(self, value):
+        self.variable.set(value)
+        if self.command:
+            self.command()
+        if self.dropdown:
+            self.dropdown.destroy()
+            self.dropdown = None
+
+
+# ======================= CALENDAR CLASS ==========================
+
 class CTkCalendar(CTkFrame):
     def __init__(self, master, on_select, **kwargs):
         super().__init__(master, fg_color="transparent", **kwargs)
@@ -21,9 +78,8 @@ class CTkCalendar(CTkFrame):
         header = CTkFrame(self, fg_color="transparent")
         header.pack(pady=5)
 
-        # Buttons
         CTkButton(header, text="<<", width=40, corner_radius=12,
-                  command=self.prev_10_years).pack(side="left", padx=3)
+                  command=self.prev_1_years).pack(side="left", padx=3)
 
         CTkButton(header, text="<", width=40, corner_radius=12,
                   command=self.prev_month).pack(side="left", padx=3)
@@ -41,17 +97,18 @@ class CTkCalendar(CTkFrame):
         )
         month_cb.pack(side="left", padx=7)
 
-        # Year dropdown
-        # Show only 40 years (current -30 to +10)
-        years = [str(y) for y in range(self.year - 30, self.year + 11)]
+        # ---------------- YEAR DROPDOWN (SCROLLABLE) ----------------
+
+        current_year = datetime.now().year
+        years = [str(y) for y in range(current_year - 40, current_year + 20)]
 
         self.year_var = StringVar(value=str(self.year))
-        year_cb = CTkComboBox(
+
+        year_cb = ScrollableYearBox(
             header,
             values=years,
             variable=self.year_var,
-            width=80,
-            corner_radius=10,
+            width=70,
             command=self.year_changed
         )
         year_cb.pack(side="left", padx=7)
@@ -60,7 +117,7 @@ class CTkCalendar(CTkFrame):
                   command=self.next_month).pack(side="left", padx=3)
 
         CTkButton(header, text=">>", width=40, corner_radius=12,
-                  command=self.next_10_years).pack(side="left", padx=3)
+                  command=self.next_1_years).pack(side="left", padx=3)
 
         # ---------------- DAY GRID ----------------
         grid_frame = CTkFrame(self, fg_color="transparent")
@@ -68,13 +125,11 @@ class CTkCalendar(CTkFrame):
 
         days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
 
-        # Day name row
         for col, d in enumerate(days):
             CTkLabel(grid_frame, text=d, width=40).grid(row=0, column=col, pady=4)
 
         month_days = calendar.monthcalendar(int(self.year), int(self.month))
 
-        # Date buttons
         for r, week in enumerate(month_days, start=1):
             for c, day in enumerate(week):
                 if day == 0:
@@ -101,13 +156,13 @@ class CTkCalendar(CTkFrame):
         self.year = int(self.year_var.get())
         self.build()
 
-    def prev_10_years(self):
-        self.year -= 10
+    def prev_1_years(self):
+        self.year -= 1
         self.year_var.set(str(self.year))
         self.build()
 
-    def next_10_years(self):
-        self.year += 10
+    def next_1_years(self):
+        self.year += 1
         self.year_var.set(str(self.year))
         self.build()
 
