@@ -1,12 +1,15 @@
 from customtkinter import CTk, CTkFrame, CTkButton, CTkLabel, CTkEntry, CTkScrollbar
 import tkinter as tk
-import appimfo
-from calendar_widget import CTkCalendar
-from tableeditor import CTkEditableTreeview
 
-from add_student import InputField
-from be import Students, test, newstudent
-test()
+
+
+import app.appimfo as appimfo
+from students.calendar_widget import CTkCalendar
+from students.tableeditor import CTkEditableTreeview
+from students.add_student import InputField
+from students.be import Students, filltable, newstudent
+
+
 
 
 def newid():
@@ -29,6 +32,8 @@ class StartApp(CTk):
         self.content_area()
         self.setlist()
         self.binds()
+        filltable()
+        self.setlist()
     def binds(self):
         self.bind("<Escape>", lambda e: self.setlist())
         self.bind("<F1>", lambda e: self.add_student_ui())
@@ -134,7 +139,7 @@ class StartApp(CTk):
                     stdd.age = int(new_value)
 
                 elif column == "address":
-                    stdd.adress = new_value
+                    stdd.address = new_value
 
                 # Update into database
                 stdd.update()       # <-- YOU MUST HAVE update() in model
@@ -145,10 +150,12 @@ class StartApp(CTk):
 
 
     def fill_table(self):
+        
         self.tree.delete(*self.tree.get_children())
         for stdd in Students:
             row = stdd.getimfo()[:5]
             self.tree.insert("", "end", values=row)
+        
 
     
     def update_student(self, row_id, column, new_value, old_value):
@@ -174,7 +181,7 @@ class StartApp(CTk):
             target.gender = new_value
 
         elif column == "address":
-            target.adress = new_value  # your model uses "adress"
+            target.address = new_value  # your model uses "address"
 
         elif column == "age":
             try:
@@ -296,7 +303,7 @@ class StartApp(CTk):
         newstudent(
             id=sid,
             name=name,
-            adress=addr,
+            address=addr,
             gender=gender,
             bday=bday,
             age=age,
